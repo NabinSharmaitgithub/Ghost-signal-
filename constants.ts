@@ -166,11 +166,11 @@ export const APP_CONFIG = {
   // FIREBASE CONFIGURATION
   // Replace these with your project keys from the Firebase Console
   FIREBASE_CONFIG: {
-    apiKey: getEnv('VITE_FIREBASE_API_KEY', "AIzaSyBPCIY5BGyMpqWMWmYjh3EuvAXZdqMSacw"),
-    authDomain: getEnv('VITE_FIREBASE_AUTH_DOMAIN', "ghost-signal-80b64.firebaseapp.com"),
-    projectId: getEnv('VITE_FIREBASE_PROJECT_ID', "ghost-signal-80b64"),
-    storageBucket: getEnv('VITE_FIREBASE_STORAGE_BUCKET', "ghost-signal-80b64.firebasestorage.app"),
-    messagingSenderId: getEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', "324817840224"),
-    appId: getEnv('VITE_FIREBASE_APP_ID', "1:324817840224:web:a363436a0b86b5c5d47b05")
+    apiKey: getEnv('VITE_FIREBASE_API_KEY', "YOUR_API_KEY"),
+    authDomain: getEnv('VITE_FIREBASE_AUTH_DOMAIN', "your-project.firebaseapp.com"),
+    projectId: getEnv('VITE_FIREBASE_PROJECT_ID', "your-project-id"),
+    storageBucket: getEnv('VITE_FIREBASE_STORAGE_BUCKET', "your-project.appspot.com"),
+    messagingSenderId: getEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', "1234567890"),
+    appId: getEnv('VITE_FIREBASE_APP_ID', "1:1234567890:web:abcdef123456")
   }
 };

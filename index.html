@@ -7,6 +7,7 @@
     <meta name="theme-color" content="#09090b" />
     <meta name="description" content="Secure Anonymous Messaging" />
     <title>GhostSignal | Secure Anonymous Chat</title>
+    <!-- Tailwind CSS (CDN kept for rapid dev styling, though PostCSS is available in build) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -82,37 +83,33 @@
         overscroll-behavior-y: none;
       }
     </style>
-  <script type="importmap">
+<script type="importmap">
 {
   "imports": {
-    "react-router-dom": "https://esm.sh/react-router-dom@6.22.3?deps=react@18.2.0,react-dom@18.2.0",
-    "react/": "https://esm.sh/react@18.2.0/",
-    "react": "https://esm.sh/react@18.2.0",
-    "react-dom/": "https://esm.sh/react-dom@18.2.0/",
-    "react-dom": "https://esm.sh/react-dom@18.2.0",
-    "recharts": "https://esm.sh/recharts@2.12.3?deps=react@18.2.0,react-dom@18.2.0",
-    "express": "https://esm.sh/express@4.18.2",
-    "path": "https://esm.sh/path-browserify@1.0.1",
-    "socket.io": "https://esm.sh/socket.io@4.7.4",
-    "http": "https://esm.sh/stream-http@3.2.0",
-    "cors": "https://esm.sh/cors@2.8.5",
-    "helmet": "https://esm.sh/helmet@7.1.0",
-    "firebase/app": "https://esm.sh/firebase@10.8.1/app",
-    "firebase/auth": "https://esm.sh/firebase@10.8.1/auth",
-    "firebase/firestore": "https://esm.sh/firebase@10.8.1/firestore",
-    "three": "https://esm.sh/three@0.160.0",
-    "@react-three/fiber": "https://esm.sh/@react-three/fiber@8.15.16?deps=three@0.160.0,react@18.2.0,react-dom@18.2.0,scheduler@0.23.0",
-    "@react-three/drei": "https://esm.sh/@react-three/drei@9.99.0?deps=three@0.160.0,react@18.2.0,react-dom@18.2.0,@react-three/fiber@8.15.16",
-    "scheduler": "https://esm.sh/scheduler@0.23.0",
-    "uuid": "https://esm.sh/uuid@9.0.1",
-    "maath": "https://esm.sh/maath@0.10.7",
+    "firebase/": "https://esm.sh/firebase@^12.7.0/",
     "firebase-admin": "https://esm.sh/firebase-admin@^13.6.0",
-    "firebase/": "https://esm.sh/firebase@^12.7.0/"
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "recharts": "https://esm.sh/recharts@^3.6.0",
+    "three": "https://esm.sh/three@^0.182.0",
+    "@react-three/drei": "https://esm.sh/@react-three/drei@^10.7.7",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+    "vite": "https://esm.sh/vite@^7.3.0",
+    "path": "https://esm.sh/path@^0.12.7",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.11.0",
+    "http": "https://esm.sh/http@^0.0.1-security",
+    "express": "https://esm.sh/express@^5.2.1",
+    "socket.io": "https://esm.sh/socket.io@^4.8.3",
+    "helmet": "https://esm.sh/helmet@^8.1.0",
+    "cors": "https://esm.sh/cors@^2.8.5",
+    "@react-three/fiber": "https://esm.sh/@react-three/fiber@^9.5.0"
   }
 }
 </script>
 </head>
   <body class="bg-zinc-950 text-zinc-100 overflow-hidden antialiased selection:bg-primary selection:text-white">
     <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>
