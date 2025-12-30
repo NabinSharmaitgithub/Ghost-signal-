@@ -1,0 +1,8 @@
+{
+  "name": "GhostSignal",
+  "description": "A production-grade anonymous messaging platform with E2EE, ephemeral media, and Tor-ready privacy features.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
