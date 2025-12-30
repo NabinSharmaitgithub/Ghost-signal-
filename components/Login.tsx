@@ -67,8 +67,27 @@ const Login: React.FC = () => {
   };
 
   const handleSocialLogin = async (provider: 'Google' | 'Facebook') => {
-      // For demo, just auto-register a social user
       setIsLoading(true);
+      setError('');
+
+      if (provider === 'Google') {
+        try {
+            const result = await api.loginWithGoogle();
+            if (result.success && result.user) {
+                sessionStorage.setItem('ghost_user', JSON.stringify(result.user));
+                navigate('/chat');
+            } else {
+                setError(result.message || 'Google Sign-In Failed');
+            }
+        } catch (e) {
+            setError('Social login error occurred.');
+        } finally {
+            setIsLoading(false);
+        }
+        return;
+      }
+
+      // Keep Facebook as simulation for now (or implement similar to Google if needed)
       setTimeout(async () => {
           const socialName = `${provider}User-${Math.floor(Math.random() * 900) + 100}`;
           const secret = 'social-login-secret';

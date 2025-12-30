@@ -2,7 +2,9 @@ import { User, Message, MessageType, AdminStats } from '../types';
 import { auth, db } from './firebase';
 import { 
   signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword 
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup
 } from 'firebase/auth';
 import { 
   collection, 
@@ -119,6 +121,51 @@ class ApiService {
     }
 
     return this.loginMock(nickname, secret);
+  }
+
+  async loginWithGoogle(): Promise<{ success: boolean; message?: string; user?: User }> {
+    if (!this.useMock && auth && db) {
+      try {
+        const provider = new GoogleAuthProvider();
+        const userCredential = await signInWithPopup(auth, provider);
+        const firebaseUser = userCredential.user;
+        
+        const userDocRef = doc(db, 'users', firebaseUser.uid);
+        const userDoc = await getDoc(userDocRef);
+        
+        let user: User;
+        if (userDoc.exists()) {
+             user = userDoc.data() as User;
+        } else {
+             user = {
+                id: firebaseUser.uid,
+                nickname: firebaseUser.displayName || `Agent-${firebaseUser.uid.slice(0,4)}`,
+                isAnonymous: false,
+                joinedAt: Date.now()
+             };
+             await setDoc(doc(db, 'users', firebaseUser.uid), user);
+        }
+
+        return { success: true, user };
+      } catch (error: any) {
+        console.error("Google Auth Error:", error);
+        
+        // If it's a configuration error (e.g. not enabled in console), fall back to mock
+        const isConfigError = error.code === 'auth/operation-not-allowed' || 
+                              error.code === 'auth/unauthorized-domain' ||
+                              error.code === 'auth/api-key-not-valid';
+
+        if (!isConfigError) {
+             return { success: false, message: error.message };
+        }
+        console.warn("GhostSignal: Google Auth not enabled/configured. Falling back to simulation.");
+      }
+    }
+
+    // Mock Fallback for Google Login
+    const socialName = `GoogleUser-${Math.floor(Math.random() * 900) + 100}`;
+    const secret = 'social-secret-key';
+    return this.registerMock(socialName, secret);
   }
 
   // --- MESSAGING ---
