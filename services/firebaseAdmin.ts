@@ -5,16 +5,16 @@ import * as admin from 'firebase-admin';
 import serviceAccount from '../serviceAccountKey.json';
 
 // Prevent multiple initializations
-if (!admin.apps.length) {
+if (!(admin as any).apps.length) {
   try {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount as any)
+    (admin as any).initializeApp({
+      credential: (admin as any).credential.cert(serviceAccount as any)
     });
   } catch (error) {
     console.error("Failed to initialize Firebase Admin:", error);
   }
 }
 
-export const adminDb = admin.firestore();
-export const adminAuth = admin.auth();
+export const adminDb = (admin as any).firestore();
+export const adminAuth = (admin as any).auth();
 export default admin;

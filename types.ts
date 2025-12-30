@@ -27,6 +27,7 @@ export interface Message {
   viewed: boolean;
   mediaUrl?: string;
   blurLevel?: number; // For progressive reveal
+  duration?: number; // Duration in ms for ephemeral media
 }
 
 export interface Room {

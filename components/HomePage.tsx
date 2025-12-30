@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icons } from '../constants';
+import ThreeHero from './ThreeHero';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -16,10 +17,12 @@ const HomePage: React.FC = () => {
             <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-purple-500/20 rounded-full blur-[100px] animate-pulse delay-700"></div>
         </div>
 
-        <div className="relative z-10 p-8 bg-zinc-900/80 backdrop-blur-xl rounded-full border border-zinc-800 shadow-2xl group cursor-default animate-float">
-           <div className="absolute inset-0 bg-primary/10 rounded-full blur-xl group-hover:blur-2xl transition-all duration-500"></div>
-           <div className="relative text-primary transform group-hover:scale-110 transition-transform duration-300">
-             <span className="[&>svg]:w-20 [&>svg]:h-20 md:[&>svg]:w-24 md:[&>svg]:h-24"><Icons.Ghost /></span>
+        {/* 3D Model Section */}
+        <div className="relative z-10 w-full max-w-lg h-[300px] md:h-[400px]">
+           <ThreeHero />
+           {/* Fallback/Overlay Text for Accessibility/Effect */}
+           <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-50 mix-blend-overlay">
+               <div className="w-64 h-64 rounded-full bg-primary/10 blur-3xl"></div>
            </div>
         </div>
         

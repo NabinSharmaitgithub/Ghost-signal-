@@ -16,23 +16,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     const handleVisibilityChange = () => {
       if (document.hidden) {
         setIsProtected(true);
-      } else {
-        // Optional: Require re-auth or click to reveal
-        setIsProtected(true); 
       }
+      // We do not auto-lock when returning (visibility visible) to avoid annoyance.
+      // We do not lock on blur (window focus lost) to prevent "black screen" when clicking outside.
     };
 
-    const handleBlur = () => setIsProtected(true);
-    const handleFocus = () => setIsProtected(false);
-
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('blur', handleBlur);
-    window.addEventListener('focus', handleFocus);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('blur', handleBlur);
-      window.removeEventListener('focus', handleFocus);
     };
   }, []);
 

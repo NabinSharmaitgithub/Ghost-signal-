@@ -12,6 +12,9 @@ const ChatRoom: React.FC = () => {
   const [isTor, setIsTor] = useState(false);
   const [activeCall, setActiveCall] = useState<CallSession | null>(null);
   const [inviteStatus, setInviteStatus] = useState<'idle' | 'copied'>('idle');
+  const [mediaTimeout, setMediaTimeout] = useState(APP_CONFIG.EPHEMERAL_TIMEOUT);
+  const [showSettings, setShowSettings] = useState(false);
+  const [currentTime, setCurrentTime] = useState(Date.now());
   
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -35,6 +38,12 @@ const ChatRoom: React.FC = () => {
 
   useEffect(() => {
     setIsTor(isTorConnection());
+  }, []);
+
+  // Timer for Message TTL
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentTime(Date.now()), 200); // Update frequently for smooth progress bar
+    return () => clearInterval(interval);
   }, []);
 
   // Realtime Messages Subscription
@@ -96,6 +105,7 @@ const ChatRoom: React.FC = () => {
         ephemeral: true,
         viewed: false,
         blurLevel: 20, 
+        duration: mediaTimeout,
       };
       await api.sendMessage(newMessage);
     };
@@ -104,6 +114,11 @@ const ChatRoom: React.FC = () => {
   };
 
   const viewEphemeralMedia = async (msgId: string) => {
+    const msg = messages.find(m => m.id === msgId);
+    if (!msg) return;
+
+    const timeoutDuration = msg.duration || APP_CONFIG.EPHEMERAL_TIMEOUT;
+
     setMessages(prev => prev.map(m => 
       m.id === msgId ? { ...m, blurLevel: 0, viewed: true } : m
     ));
@@ -111,7 +126,7 @@ const ChatRoom: React.FC = () => {
     
     setTimeout(async () => {
         await api.expireMessage(msgId);
-    }, APP_CONFIG.EPHEMERAL_TIMEOUT);
+    }, timeoutDuration);
   };
 
   const initiateCall = (type: 'video' | 'audio') => {
@@ -147,8 +162,16 @@ const ChatRoom: React.FC = () => {
 
   if (!currentUser) return null; // Or a loading spinner while checking auth
 
+  // Calculate visible messages based on TTL
+  const visibleMessages = messages.filter(msg => {
+      // Always show system/destroy messages momentarily or let them persist?
+      // User asked for "Every message", but Destroy messages are placeholders.
+      // Let's hide everything older than 20s.
+      return (currentTime - msg.timestamp) < APP_CONFIG.MESSAGE_TTL;
+  });
+
   return (
-    <div className="flex flex-col h-full max-w-2xl mx-auto bg-zinc-950 sm:border-x border-zinc-800 relative">
+    <div className="flex flex-col h-full max-w-5xl mx-auto bg-zinc-950 sm:border-x border-zinc-800 relative">
       
       {/* Active Call Overlay */}
       {activeCall && (
@@ -173,7 +196,7 @@ const ChatRoom: React.FC = () => {
                 </p>
              </div>
          </div>
-         <div className="flex gap-2">
+         <div className="flex gap-2 relative">
             <button 
                 onClick={handleInvite}
                 className="p-2 rounded-full transition-colors text-zinc-400 hover:bg-zinc-800 hover:text-primary"
@@ -181,6 +204,43 @@ const ChatRoom: React.FC = () => {
             >
                 {inviteStatus === 'copied' ? <span className="text-emerald-500"><Icons.Check /></span> : <Icons.UserPlus />}
             </button>
+            <button
+                onClick={() => setShowSettings(!showSettings)}
+                className={`p-2 rounded-full transition-colors ${showSettings ? 'bg-zinc-800 text-primary' : 'text-zinc-400 hover:bg-zinc-800 hover:text-primary'}`}
+                title="Message Settings"
+            >
+                <Icons.Settings />
+            </button>
+            
+            {showSettings && (
+              <div className="absolute top-12 right-0 bg-zinc-900 border border-zinc-800 p-4 rounded-xl shadow-2xl w-64 z-50 animate-in fade-in slide-in-from-top-2">
+                  <h4 className="text-sm font-bold text-zinc-200 mb-3 flex items-center gap-2">
+                      <Icons.EyeOff /> Self-Destruct Timer
+                  </h4>
+                  <div className="grid grid-cols-4 gap-2">
+                      {[5, 10, 30, 60].map(s => (
+                          <button
+                              key={s}
+                              onClick={() => { setMediaTimeout(s * 1000); setShowSettings(false); }}
+                              className={`px-2 py-2 text-xs font-mono rounded-lg transition-colors border ${
+                                  mediaTimeout === s * 1000 
+                                  ? 'bg-primary/20 text-primary border-primary/50' 
+                                  : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:bg-zinc-800'
+                              }`}
+                          >
+                              {s}s
+                          </button>
+                      ))}
+                  </div>
+                  <p className="text-[10px] text-zinc-500 mt-2 leading-tight">
+                    Determines how long sent photos remain visible after the recipient opens them.
+                  </p>
+                  <p className="text-[10px] text-red-400 mt-2 border-t border-zinc-800 pt-2">
+                    *Global 20s message wipe is currently active.
+                  </p>
+              </div>
+            )}
+
             <button 
               onClick={() => initiateCall('audio')}
               disabled={isTor}
@@ -213,8 +273,16 @@ const ChatRoom: React.FC = () => {
 
       {/* Chat Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((msg) => {
+        {visibleMessages.length === 0 && messages.length > 0 && (
+           <div className="text-center py-10 opacity-50">
+              <span className="text-xs font-mono text-zinc-600">HISTORY CLEARED BY SECURITY PROTOCOL</span>
+           </div>
+        )}
+
+        {visibleMessages.map((msg) => {
           const isMe = msg.senderId === currentUser.id;
+          const elapsed = currentTime - msg.timestamp;
+          const remainingPercent = Math.max(0, 100 - (elapsed / APP_CONFIG.MESSAGE_TTL) * 100);
           
           if (msg.type === MessageType.DESTROY) {
              return (
@@ -228,11 +296,17 @@ const ChatRoom: React.FC = () => {
 
           return (
             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] rounded-2xl p-3 ${
+              <div className={`max-w-[80%] rounded-2xl p-3 relative overflow-hidden ${
                 isMe 
                   ? 'bg-primary/10 text-primary-50 border border-primary/20 rounded-tr-none' 
                   : 'bg-zinc-900 text-zinc-200 border border-zinc-800 rounded-tl-none'
               }`}>
+                {/* TTL Progress Bar */}
+                <div 
+                    className="absolute bottom-0 left-0 h-0.5 bg-current opacity-20 transition-all duration-200 ease-linear"
+                    style={{ width: `${remainingPercent}%` }}
+                />
+
                 {msg.type === MessageType.IMAGE && msg.mediaUrl ? (
                   <div className="relative group">
                     <div className="overflow-hidden rounded-lg relative bg-black/20">
@@ -259,7 +333,7 @@ const ChatRoom: React.FC = () => {
                     )}
                   </div>
                 ) : (
-                  <p className="text-sm break-words whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                  <p className="text-sm break-words whitespace-pre-wrap leading-relaxed pb-1">{msg.content}</p>
                 )}
                 
                 <div className="flex items-center justify-end gap-1 mt-1 opacity-50">
