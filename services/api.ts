@@ -1,14 +1,16 @@
-import { initializeApp, FirebaseApp } from 'firebase/app';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, Auth } from 'firebase/auth';
-import { getFirestore, collection, addDoc, query, orderBy, limit, onSnapshot, updateDoc, doc, getDocs, setDoc, Firestore, getCountFromServer } from 'firebase/firestore';
 import { User, Message, MessageType, AdminStats } from '../types';
 import { APP_CONFIG } from '../constants';
+import { auth, db } from './firebase';
+
+// Firebase v9 modular SDK imports with fallback for type checking issues
+import * as _firebaseAuth from 'firebase/auth';
+import * as _firebaseFirestore from 'firebase/firestore';
+
+const { signInWithEmailAndPassword, createUserWithEmailAndPassword } = _firebaseAuth as any;
+const { collection, addDoc, query, orderBy, limit, onSnapshot, updateDoc, doc, getDocs, setDoc, getDoc, getCountFromServer } = _firebaseFirestore as any;
 
 // Unified Service to handle both Real Backend (Firebase) and Fallback (Mock)
 class ApiService {
-  private app: FirebaseApp | null = null;
-  private auth: Auth | null = null;
-  private db: Firestore | null = null;
   private useMock: boolean = true;
 
   // Mock State
@@ -19,24 +21,10 @@ class ApiService {
   private listeners: Function[] = [];
 
   constructor() {
-    const hasKeys = APP_CONFIG.FIREBASE_CONFIG.apiKey && 
-                    APP_CONFIG.FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY";
+    // Determine mode based on successful firebase initialization
+    this.useMock = !auth || !db;
 
-    if (hasKeys) {
-      try {
-        this.app = initializeApp(APP_CONFIG.FIREBASE_CONFIG);
-        this.auth = getAuth(this.app);
-        this.db = getFirestore(this.app);
-        this.useMock = false;
-        console.log("GhostSignal: Connected to Firebase Backend Uplink.");
-      } catch (e) {
-        console.warn("GhostSignal: Firebase connection failed, falling back to local simulation.", e);
-      }
-    } else {
-        console.log("GhostSignal: Running in Simulation Mode (In-Memory). Configure constants.ts to enable Firebase.");
-    }
-
-    // Seed mock data
+    // Seed mock data regardless, for fallback scenarios
     this.seedMockData();
   }
 
@@ -50,10 +38,10 @@ class ApiService {
   // Email format: [codename]@ghost.local
 
   async register(nickname: string, secret: string): Promise<{ success: boolean; message?: string; user?: User }> {
-    if (!this.useMock && this.auth && this.db) {
+    if (!this.useMock && auth && db) {
       const email = `${nickname.replace(/\s+/g, '')}@ghost.local`; 
       try {
-        const userCredential = await createUserWithEmailAndPassword(this.auth, email, secret);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, secret);
         const firebaseUser = userCredential.user;
         
         // Store user profile in Firestore
@@ -64,7 +52,7 @@ class ApiService {
           joinedAt: Date.now()
         };
 
-        await setDoc(doc(this.db, 'users', firebaseUser.uid), user);
+        await setDoc(doc(db, 'users', firebaseUser.uid), user);
 
         return { success: true, user };
       } catch (error: any) {
@@ -76,13 +64,13 @@ class ApiService {
   }
 
   async login(nickname: string, secret: string): Promise<{ success: boolean; message?: string; user?: User }> {
-    if (!this.useMock && this.auth && this.db) {
+    if (!this.useMock && auth && db) {
       const email = `${nickname.replace(/\s+/g, '')}@ghost.local`;
       try {
-        const userCredential = await signInWithEmailAndPassword(this.auth, email, secret);
-        // We can fetch the user profile from Firestore, but for now we reconstruct it from auth or defaults
-        // A real implementation would fetch from the 'users' collection
-        const userDoc = await import('firebase/firestore').then(mod => mod.getDoc(mod.doc(this.db!, 'users', userCredential.user.uid)));
+        const userCredential = await signInWithEmailAndPassword(auth, email, secret);
+        
+        const userDocRef = doc(db, 'users', userCredential.user.uid);
+        const userDoc = await getDoc(userDocRef);
         
         let user: User;
         if (userDoc.exists()) {
@@ -109,8 +97,8 @@ class ApiService {
   // --- MESSAGING ---
 
   async sendMessage(msg: Message): Promise<void> {
-    if (!this.useMock && this.db) {
-        await addDoc(collection(this.db, 'messages'), {
+    if (!this.useMock && db) {
+        await addDoc(collection(db, 'messages'), {
             ...msg,
             timestamp: msg.timestamp // Ensure number format
         });
@@ -123,11 +111,11 @@ class ApiService {
   }
 
   async getMessages(): Promise<Message[]> {
-    if (!this.useMock && this.db) {
-        const q = query(collection(this.db, 'messages'), orderBy('timestamp', 'desc'), limit(50));
+    if (!this.useMock && db) {
+        const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'), limit(50));
         const querySnapshot = await getDocs(q);
         const msgs: Message[] = [];
-        querySnapshot.forEach((doc) => {
+        querySnapshot.forEach((doc: any) => {
             msgs.push(doc.data() as Message);
         });
         return msgs.reverse(); // Return oldest first for chat UI
@@ -137,13 +125,13 @@ class ApiService {
 
   // Realtime Subscription
   subscribeToMessages(callback: (messages: Message[]) => void): { unsubscribe: () => void } {
-    if (!this.useMock && this.db) {
+    if (!this.useMock && db) {
         // Subscribe to last 50 messages
-        const q = query(collection(this.db, 'messages'), orderBy('timestamp', 'desc'), limit(50));
+        const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'), limit(50));
         
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const unsubscribe = onSnapshot(q, (querySnapshot: any) => {
             const msgs: Message[] = [];
-            querySnapshot.forEach((doc) => {
+            querySnapshot.forEach((doc: any) => {
                 // We trust the document structure matches Message interface
                 msgs.push(doc.data() as Message);
             });
@@ -165,16 +153,16 @@ class ApiService {
   }
 
   async markAsViewed(id: string): Promise<void> {
-    if (!this.useMock && this.db) {
+    if (!this.useMock && db) {
         // Query to find the doc with this ID field (since we stored custom IDs)
         // Ideally we use firestore document IDs, but we generated a custom ID in ChatRoom
-        const q = query(collection(this.db, 'messages'), orderBy('timestamp', 'desc'), limit(100)); // limit scope
+        const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'), limit(100)); // limit scope
         const snapshot = await getDocs(q);
         
         // This is inefficient in production (should use doc ID), but works for switching backend without refactoring entire app logic
-        snapshot.forEach(async (d) => {
+        snapshot.forEach(async (d: any) => {
             if (d.data().id === id) {
-                await updateDoc(doc(this.db!, 'messages', d.id), {
+                await updateDoc(doc(db!, 'messages', d.id), {
                     viewed: true,
                     blurLevel: 0
                 });
@@ -191,13 +179,13 @@ class ApiService {
   }
 
   async expireMessage(id: string): Promise<void> {
-    if (!this.useMock && this.db) {
-        const q = query(collection(this.db, 'messages'), orderBy('timestamp', 'desc'), limit(100));
+    if (!this.useMock && db) {
+        const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'), limit(100));
         const snapshot = await getDocs(q);
         
-        snapshot.forEach(async (d) => {
+        snapshot.forEach(async (d: any) => {
             if (d.data().id === id) {
-                 await updateDoc(doc(this.db!, 'messages', d.id), {
+                 await updateDoc(doc(db!, 'messages', d.id), {
                     type: MessageType.DESTROY,
                     content: 'Media expired',
                     mediaUrl: null,
@@ -220,14 +208,14 @@ class ApiService {
   // --- ADMIN ---
 
   async getStats(): Promise<AdminStats> {
-    if (!this.useMock && this.db) {
+    if (!this.useMock && db) {
         // Getting exact counts in Firestore can be expensive or requires 'count' aggregation queries
         // Using simple estimates or aggregation queries
         try {
-            const usersColl = collection(this.db, 'users');
+            const usersColl = collection(db, 'users');
             const userSnapshot = await getCountFromServer(usersColl);
             
-            const msgsColl = collection(this.db, 'messages');
+            const msgsColl = collection(db, 'messages');
             const msgSnapshot = await getCountFromServer(msgsColl);
             
             return {
@@ -259,10 +247,10 @@ class ApiService {
   }
 
   async getUsers(): Promise<User[]> {
-      if (!this.useMock && this.db) {
-          const snapshot = await getDocs(collection(this.db, 'users'));
+      if (!this.useMock && db) {
+          const snapshot = await getDocs(collection(db, 'users'));
           const users: User[] = [];
-          snapshot.forEach(d => users.push(d.data() as User));
+          snapshot.forEach((d: any) => users.push(d.data() as User));
           return users;
       }
       return Array.from(this.mockUsers.values());

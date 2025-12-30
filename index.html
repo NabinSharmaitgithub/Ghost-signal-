@@ -39,6 +39,13 @@
             },
             animation: {
               'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'float': 'float 6s ease-in-out infinite',
+            },
+            keyframes: {
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-20px)' },
+              }
             }
           },
         },
@@ -93,7 +100,8 @@
     "firebase/app": "https://esm.sh/firebase@10.8.1/app",
     "firebase/auth": "https://esm.sh/firebase@10.8.1/auth",
     "firebase/firestore": "https://esm.sh/firebase@10.8.1/firestore",
-    "firebase/": "https://esm.sh/firebase@^12.7.0/"
+    "firebase/": "https://esm.sh/firebase@^12.7.0/",
+    "firebase-admin": "https://esm.sh/firebase-admin@^13.6.0"
   }
 }
 </script>

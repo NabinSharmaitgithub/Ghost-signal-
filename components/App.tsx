@@ -1,10 +1,10 @@
 import React from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Layout from './components/Layout';
-import ChatRoom from './components/ChatRoom';
-import AdminPanel from './components/AdminPanel';
-import Login from './components/Login';
-import HomePage from './components/HomePage';
+import Layout from './Layout';
+import ChatRoom from './ChatRoom';
+import AdminPanel from './AdminPanel';
+import Login from './Login';
+import HomePage from './HomePage';
 
 const App: React.FC = () => {
   return (

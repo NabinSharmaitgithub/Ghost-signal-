@@ -11,6 +11,7 @@ const ChatRoom: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [isTor, setIsTor] = useState(false);
   const [activeCall, setActiveCall] = useState<CallSession | null>(null);
+  const [inviteStatus, setInviteStatus] = useState<'idle' | 'copied'>('idle');
   
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -137,6 +138,13 @@ const ChatRoom: React.FC = () => {
     setActiveCall(null);
   };
 
+  const handleInvite = () => {
+    const inviteLink = `${window.location.origin}/#/login?ref=${currentUser?.id}`;
+    navigator.clipboard.writeText(`GhostSignal Secure Invite: ${inviteLink}`);
+    setInviteStatus('copied');
+    setTimeout(() => setInviteStatus('idle'), 2000);
+  };
+
   if (!currentUser) return null; // Or a loading spinner while checking auth
 
   return (
@@ -166,6 +174,13 @@ const ChatRoom: React.FC = () => {
              </div>
          </div>
          <div className="flex gap-2">
+            <button 
+                onClick={handleInvite}
+                className="p-2 rounded-full transition-colors text-zinc-400 hover:bg-zinc-800 hover:text-primary"
+                title="Copy Secure Invite Link"
+            >
+                {inviteStatus === 'copied' ? <span className="text-emerald-500"><Icons.Check /></span> : <Icons.UserPlus />}
+            </button>
             <button 
               onClick={() => initiateCall('audio')}
               disabled={isTor}
