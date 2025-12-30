@@ -29,7 +29,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-zinc-950 text-zinc-200 font-sans flex flex-col overflow-hidden">
+    // Use h-[100dvh] for mobile browsers to account for dynamic address bars
+    <div className="relative h-[100dvh] w-full bg-zinc-950 text-zinc-200 font-sans flex flex-col overflow-hidden">
       {/* Privacy Shield Overlay */}
       {isProtected && (
         <div 
@@ -49,7 +50,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       )}
 
       {/* Header */}
-      <header className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-md sticky top-0 z-40">
+      <header className="flex-none flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-md sticky top-0 z-40">
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
           <div className="text-primary"><Icons.Ghost /></div>
           <span className="font-bold tracking-tight text-zinc-100">GhostSignal</span>
@@ -81,8 +82,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       )}
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-hidden relative">
+      {/* Main Content: flex-1 ensures it fills remaining space, overflow-hidden keeps scrolling internal */}
+      <main className="flex-1 w-full overflow-hidden relative flex flex-col">
         {children}
       </main>
     </div>

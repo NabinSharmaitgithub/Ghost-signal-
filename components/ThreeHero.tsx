@@ -3,37 +3,6 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, Sparkles, MeshDistortMaterial, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 
-// Extend JSX namespace to support React Three Fiber elements
-// We declare both global JSX and React.JSX to cover different React/TS versions
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      ambientLight: any;
-      pointLight: any;
-      group: any;
-      mesh: any;
-      dodecahedronGeometry: any;
-      icosahedronGeometry: any;
-      meshStandardMaterial: any;
-    }
-  }
-}
-
-// Augment React.JSX for newer React types where JSX is namespaced under React
-declare module 'react' {
-  namespace JSX {
-    interface IntrinsicElements {
-      ambientLight: any;
-      pointLight: any;
-      group: any;
-      mesh: any;
-      dodecahedronGeometry: any;
-      icosahedronGeometry: any;
-      meshStandardMaterial: any;
-    }
-  }
-}
-
 const CyberCore = () => {
   const outerRef = useRef<THREE.Mesh>(null);
   const innerRef = useRef<THREE.Mesh>(null);

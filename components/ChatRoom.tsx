@@ -60,8 +60,14 @@ const ChatRoom: React.FC = () => {
     };
   }, [currentUser]);
 
+  // Auto-scroll to bottom on new message
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current) {
+        // Use requestAnimationFrame to ensure DOM is updated before scrolling
+        requestAnimationFrame(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        });
+    }
   }, [messages.length]); 
 
   const handleSendMessage = async (e?: React.FormEvent) => {
@@ -171,7 +177,7 @@ const ChatRoom: React.FC = () => {
   });
 
   return (
-    <div className="flex flex-col h-full max-w-5xl mx-auto bg-zinc-950 sm:border-x border-zinc-800 relative">
+    <div className="flex flex-col h-full max-w-5xl mx-auto bg-zinc-950 sm:border-x border-zinc-800 relative w-full">
       
       {/* Active Call Overlay */}
       {activeCall && (
@@ -183,7 +189,7 @@ const ChatRoom: React.FC = () => {
       )}
 
       {/* Header with Call Controls */}
-      <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/50 backdrop-blur-sm sticky top-0 z-10">
+      <div className="flex-none p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/50 backdrop-blur-sm sticky top-0 z-10">
          <div className="flex items-center gap-3">
              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary border border-primary/30">
                <Icons.Ghost />
@@ -262,7 +268,7 @@ const ChatRoom: React.FC = () => {
 
       {/* Tor Warning Banner */}
       {isTor && (
-        <div className="bg-amber-900/20 border-b border-amber-500/20 p-2 px-4 flex items-center justify-between backdrop-blur-sm animate-in slide-in-from-top-2">
+        <div className="flex-none bg-amber-900/20 border-b border-amber-500/20 p-2 px-4 flex items-center justify-between backdrop-blur-sm animate-in slide-in-from-top-2">
             <div className="flex items-center gap-2 text-amber-500">
                 <Icons.Shield />
                 <span className="text-[10px] sm:text-xs font-mono font-bold tracking-tight">TOR CIRCUIT ACTIVE</span>
@@ -272,7 +278,8 @@ const ChatRoom: React.FC = () => {
       )}
 
       {/* Chat Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Added min-h-0 to allow flex container to shrink/scroll properly in nested flex environments */}
+      <div className="flex-1 overflow-y-auto min-h-0 p-4 space-y-4 scroll-smooth">
         {visibleMessages.length === 0 && messages.length > 0 && (
            <div className="text-center py-10 opacity-50">
               <span className="text-xs font-mono text-zinc-600">HISTORY CLEARED BY SECURITY PROTOCOL</span>
@@ -346,11 +353,11 @@ const ChatRoom: React.FC = () => {
             </div>
           );
         })}
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} className="h-4" />
       </div>
 
       {/* Input Area */}
-      <div className="p-3 bg-zinc-900 border-t border-zinc-800">
+      <div className="flex-none p-3 bg-zinc-900 border-t border-zinc-800">
         <form 
           onSubmit={handleSendMessage}
           className="flex items-center gap-3 bg-zinc-950 p-2 rounded-full border border-zinc-800 focus-within:border-primary/50 transition-colors"

@@ -32,6 +32,7 @@ class ApiService {
 
   constructor() {
     // Determine mode based on successful firebase initialization
+    // We strictly check if auth/db exist.
     this.useMock = !auth || !db;
 
     // Seed mock data regardless, for fallback scenarios
@@ -66,6 +67,11 @@ class ApiService {
 
         return { success: true, user };
       } catch (error: any) {
+        // Fallback to mock if Firebase Auth provider is not enabled in console
+        if (error.code === 'auth/operation-not-allowed') {
+            console.warn("GhostSignal: Firebase Email/Password Auth not enabled. Falling back to local mock.");
+            return this.registerMock(nickname, secret);
+        }
         return { success: false, message: error.message };
       }
     }
@@ -97,6 +103,17 @@ class ApiService {
 
         return { success: true, user };
       } catch (error: any) {
+        // Fallback to mock if Firebase Auth provider is not enabled in console
+        if (error.code === 'auth/operation-not-allowed') {
+             console.warn("GhostSignal: Firebase Email/Password Auth not enabled. Falling back to local mock.");
+             return this.loginMock(nickname, secret);
+        }
+        // Fallback if user not found in firebase but might exist in mock (dev convenience)
+        if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+             const mockResult = this.loginMock(nickname, secret);
+             if (mockResult.success) return mockResult;
+        }
+        
         return { success: false, message: error.message };
       }
     }
@@ -108,11 +125,16 @@ class ApiService {
 
   async sendMessage(msg: Message): Promise<void> {
     if (!this.useMock && db) {
-        await addDoc(collection(db, 'messages'), {
-            ...msg,
-            timestamp: msg.timestamp // Ensure number format
-        });
-        return;
+        try {
+            await addDoc(collection(db, 'messages'), {
+                ...msg,
+                timestamp: msg.timestamp // Ensure number format
+            });
+            return;
+        } catch (e) {
+            console.error("Firestore write failed, using mock", e);
+            // Fallthrough to mock
+        }
     }
     
     this.mockMessages.push(msg);
@@ -122,13 +144,17 @@ class ApiService {
 
   async getMessages(): Promise<Message[]> {
     if (!this.useMock && db) {
-        const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'), limit(50));
-        const querySnapshot = await getDocs(q);
-        const msgs: Message[] = [];
-        querySnapshot.forEach((doc: any) => {
-            msgs.push(doc.data() as Message);
-        });
-        return msgs.reverse(); // Return oldest first for chat UI
+        try {
+            const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'), limit(50));
+            const querySnapshot = await getDocs(q);
+            const msgs: Message[] = [];
+            querySnapshot.forEach((doc: any) => {
+                msgs.push(doc.data() as Message);
+            });
+            return msgs.reverse(); // Return oldest first for chat UI
+        } catch (e) {
+            console.error("Firestore read failed", e);
+        }
     }
     return [...this.mockMessages];
   }
@@ -136,20 +162,29 @@ class ApiService {
   // Realtime Subscription
   subscribeToMessages(callback: (messages: Message[]) => void): { unsubscribe: () => void } {
     if (!this.useMock && db) {
-        // Subscribe to last 50 messages
-        const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'), limit(50));
-        
-        const unsubscribe = onSnapshot(q, (querySnapshot: any) => {
-            const msgs: Message[] = [];
-            querySnapshot.forEach((doc: any) => {
-                // We trust the document structure matches Message interface
-                msgs.push(doc.data() as Message);
+        try {
+            // Subscribe to last 50 messages
+            const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'), limit(50));
+            
+            const unsubscribe = onSnapshot(q, (querySnapshot: any) => {
+                const msgs: Message[] = [];
+                querySnapshot.forEach((doc: any) => {
+                    // We trust the document structure matches Message interface
+                    msgs.push(doc.data() as Message);
+                });
+                // Firestore returns desc order (newest first), reverse for UI
+                callback(msgs.reverse());
+            }, (error) => {
+                console.warn("Firestore subscription error, switching to mock", error);
+                // If subscription fails (e.g. permissions), fallback to mock listener
+                this.listeners.push(callback);
+                callback([...this.mockMessages]);
             });
-            // Firestore returns desc order (newest first), reverse for UI
-            callback(msgs.reverse());
-        });
 
-        return { unsubscribe };
+            return { unsubscribe };
+        } catch(e) {
+             console.error("Firestore setup error", e);
+        }
     }
 
     // Mock Subscription
