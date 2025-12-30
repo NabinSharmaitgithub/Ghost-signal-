@@ -1,2 +1,2 @@
-// Moved to components/ChatRoom.tsx
+// Moved to components/Login.tsx
 export default function Placeholder() { return null; }

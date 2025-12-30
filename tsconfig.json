@@ -23,6 +23,8 @@
   "exclude": [
     "node_modules",
     "services/server.ts",
-    "services/firebaseAdmin.ts"
+    "services/firebaseAdmin.ts",
+    "ChatRoom.tsx", 
+    "Login.tsx"
   ]
 }
