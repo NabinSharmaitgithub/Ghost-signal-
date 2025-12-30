@@ -1,5 +1,28 @@
 import React from 'react';
 
+// Helper to safely get environment variables (Vite/CRA/Node compatible)
+const getEnv = (key: string, fallback: string) => {
+  // Check for Vite's import.meta.env
+  try {
+    // @ts-ignore
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
+        // @ts-ignore
+        return import.meta.env[key];
+    }
+  } catch (e) {}
+
+  // Check for Node/CRA process.env
+  try {
+    // @ts-ignore
+    if (typeof process !== 'undefined' && process.env && process.env[key]) {
+        // @ts-ignore
+        return process.env[key];
+    }
+  } catch (e) {}
+
+  return fallback;
+};
+
 // Using a simple SVG icon set
 export const Icons = {
   Lock: () => (
@@ -143,11 +166,11 @@ export const APP_CONFIG = {
   // FIREBASE CONFIGURATION
   // Replace these with your project keys from the Firebase Console
   FIREBASE_CONFIG: {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "your-project.firebaseapp.com",
-    projectId: "your-project-id",
-    storageBucket: "your-project.appspot.com",
-    messagingSenderId: "1234567890",
-    appId: "1:1234567890:web:abcdef123456"
+    apiKey: getEnv('VITE_FIREBASE_API_KEY', "YOUR_API_KEY"),
+    authDomain: getEnv('VITE_FIREBASE_AUTH_DOMAIN', "your-project.firebaseapp.com"),
+    projectId: getEnv('VITE_FIREBASE_PROJECT_ID', "your-project-id"),
+    storageBucket: getEnv('VITE_FIREBASE_STORAGE_BUCKET', "your-project.appspot.com"),
+    messagingSenderId: getEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', "1234567890"),
+    appId: getEnv('VITE_FIREBASE_APP_ID', "1:1234567890:web:abcdef123456")
   }
 };
