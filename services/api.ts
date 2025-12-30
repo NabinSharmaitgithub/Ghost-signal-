@@ -1,13 +1,23 @@
 import { User, Message, MessageType, AdminStats } from '../types';
-import { APP_CONFIG } from '../constants';
 import { auth, db } from './firebase';
-
-// Firebase v9 modular SDK imports with fallback for type checking issues
-import * as _firebaseAuth from 'firebase/auth';
-import * as _firebaseFirestore from 'firebase/firestore';
-
-const { signInWithEmailAndPassword, createUserWithEmailAndPassword } = _firebaseAuth as any;
-const { collection, addDoc, query, orderBy, limit, onSnapshot, updateDoc, doc, getDocs, setDoc, getDoc, getCountFromServer } = _firebaseFirestore as any;
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword 
+} from 'firebase/auth';
+import { 
+  collection, 
+  addDoc, 
+  query, 
+  orderBy, 
+  limit, 
+  onSnapshot, 
+  updateDoc, 
+  doc, 
+  getDocs, 
+  setDoc, 
+  getDoc, 
+  getCountFromServer 
+} from 'firebase/firestore';
 
 // Unified Service to handle both Real Backend (Firebase) and Fallback (Mock)
 class ApiService {

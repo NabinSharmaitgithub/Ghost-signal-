@@ -18,12 +18,8 @@ const HomePage: React.FC = () => {
         </div>
 
         {/* 3D Model Section */}
-        <div className="relative z-10 w-full max-w-lg h-[300px] md:h-[400px]">
-           <ThreeHero />
-           {/* Fallback/Overlay Text for Accessibility/Effect */}
-           <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-50 mix-blend-overlay">
-               <div className="w-64 h-64 rounded-full bg-primary/10 blur-3xl"></div>
-           </div>
+        <div className="relative z-10 w-full max-w-3xl h-[400px] md:h-[500px] -my-12">
+            <ThreeHero />
         </div>
         
         <div className="space-y-6 max-w-3xl mx-auto relative z-10">

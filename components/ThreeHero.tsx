@@ -4,7 +4,23 @@ import { Float, Sparkles, MeshDistortMaterial, OrbitControls } from '@react-thre
 import * as THREE from 'three';
 
 // Extend JSX namespace to support React Three Fiber elements
+// We declare both global JSX and React.JSX to cover different React/TS versions
 declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      ambientLight: any;
+      pointLight: any;
+      group: any;
+      mesh: any;
+      dodecahedronGeometry: any;
+      icosahedronGeometry: any;
+      meshStandardMaterial: any;
+    }
+  }
+}
+
+// Augment React.JSX for newer React types where JSX is namespaced under React
+declare module 'react' {
   namespace JSX {
     interface IntrinsicElements {
       ambientLight: any;
@@ -85,7 +101,6 @@ const ThreeHero: React.FC = () => {
           
           <CyberCore />
           
-          {/* Allow user to rotate but disable zoom/pan to keep it strictly decorative */}
           <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={0.5} />
         </Canvas>
     </div>

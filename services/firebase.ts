@@ -1,23 +1,14 @@
 import { APP_CONFIG } from '../constants';
-
-// Use safe imports with any casting to avoid "no exported member" errors in strict environments
-import * as _firebaseApp from 'firebase/app';
-import * as _firebaseAuth from 'firebase/auth';
-import * as _firebaseFirestore from 'firebase/firestore';
-
-const { initializeApp } = _firebaseApp as any;
-const { getAuth } = _firebaseAuth as any;
-const { getFirestore } = _firebaseFirestore as any;
-
-// Define types loosely to avoid import errors
-type FirebaseApp = any;
-type Auth = any;
-type Firestore = any;
+import { initializeApp, FirebaseApp } from 'firebase/app';
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
+import { getAnalytics, Analytics } from 'firebase/analytics';
 
 // Global instances
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
 let db: Firestore | undefined;
+let analytics: Analytics | undefined;
 
 const config = APP_CONFIG.FIREBASE_CONFIG;
 
@@ -29,6 +20,13 @@ if (isConfigured) {
     app = initializeApp(config);
     auth = getAuth(app);
     db = getFirestore(app);
+    if (config.measurementId) {
+        try {
+            analytics = getAnalytics(app);
+        } catch (e) {
+            console.log("Firebase Analytics not supported in this environment");
+        }
+    }
     console.log("GhostSignal: Firebase Connection Established.");
   } catch (error) {
     console.error("GhostSignal: Firebase Initialization Error.", error);
@@ -37,4 +35,4 @@ if (isConfigured) {
   console.log("GhostSignal: Firebase Config missing. Falling back to In-Memory Simulation.");
 }
 
-export { app, auth, db };
+export { app, auth, db, analytics };

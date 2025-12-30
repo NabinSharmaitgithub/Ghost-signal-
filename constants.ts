@@ -164,13 +164,14 @@ export const APP_CONFIG = {
   ID_LENGTH: 8,
   MESSAGE_TTL: 20000, // 20 seconds
   // FIREBASE CONFIGURATION
-  // Replace these with your project keys from the Firebase Console
+  // Replaced with your project keys
   FIREBASE_CONFIG: {
-    apiKey: getEnv('VITE_FIREBASE_API_KEY', "YOUR_API_KEY"),
-    authDomain: getEnv('VITE_FIREBASE_AUTH_DOMAIN', "your-project.firebaseapp.com"),
-    projectId: getEnv('VITE_FIREBASE_PROJECT_ID', "your-project-id"),
-    storageBucket: getEnv('VITE_FIREBASE_STORAGE_BUCKET', "your-project.appspot.com"),
-    messagingSenderId: getEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', "1234567890"),
-    appId: getEnv('VITE_FIREBASE_APP_ID', "1:1234567890:web:abcdef123456")
+    apiKey: getEnv('VITE_FIREBASE_API_KEY', "AIzaSyDvoGRQ_JpNBPVor8y0Rnsk7X__Sm-X8Mw"),
+    authDomain: getEnv('VITE_FIREBASE_AUTH_DOMAIN', "ghost-signal-9c04e.firebaseapp.com"),
+    projectId: getEnv('VITE_FIREBASE_PROJECT_ID', "ghost-signal-9c04e"),
+    storageBucket: getEnv('VITE_FIREBASE_STORAGE_BUCKET', "ghost-signal-9c04e.firebasestorage.app"),
+    messagingSenderId: getEnv('VITE_FIREBASE_MESSAGING_SENDER_ID', "413309465102"),
+    appId: getEnv('VITE_FIREBASE_APP_ID', "1:413309465102:web:e21f3c7115b38b66ff025f"),
+    measurementId: getEnv('VITE_FIREBASE_MEASUREMENT_ID', "G-NHC8JXJYW8")
   }
 };
